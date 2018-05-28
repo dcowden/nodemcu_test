@@ -7,7 +7,8 @@
 #include <OLEDDisplayUi.h>
 #include "SoftwareSerial.h"
 #include "DFRobotDFPlayerMini.h"
-
+#include "string.h"
+#include "font.h"
 #define LED_CNT 20
 #define BRIGHTNESS 80
 #define LOOP_DELAY 1000
@@ -18,11 +19,12 @@
 #define DFPLAYER_BAUD 9600
 #define SERIALBAUD 115200
 
+
 const int SDA_PIN = D3;
 const int SDC_PIN = D4;
 
 CRGB leds[LED_CNT];
-const char* ssid = "bluedirt3";
+const char* ssid = "bluedirt";
 const char* password = "gt0199f-gtd566a";
 SSD1306Wire  display(OLED_I2C_ADDRESS, SDA_PIN, SDC_PIN);
 
@@ -109,8 +111,7 @@ void drawTextAlignmentDemo() {
   display.setFont(ArialMT_Plain_10);
 
   // The coordinates define the left starting point of the text
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawString(0, 10, "Left aligned (0,10)");
+
 
   // The coordinates define the center of the text
   display.setTextAlignment(TEXT_ALIGN_CENTER);
@@ -127,12 +128,16 @@ void setup() {
     display.clear();
     display.display();
 
+
     mySoftwareSerial.begin(DFPLAYER_BAUD);
     Serial.begin(SERIALBAUD);
 
     display.flipScreenVertically();
-    display.setFont(ArialMT_Plain_10);
 
+
+    pinMode(D5,INPUT_PULLUP);
+    pinMode(D6,INPUT_PULLUP);
+    pinMode(A0,INPUT);
     pinMode(D0,OUTPUT);
     pinMode(LED_PIN,OUTPUT);
     FastLED.addLeds<NEOPIXEL,LED_PIN>(leds, LED_CNT);    
@@ -191,14 +196,33 @@ void setup() {
     // });
     server.begin();
     Serial.println("Web server started!");
+    myDFPlayer.volume(10);
     myDFPlayer.play(23); 
 }
 
 
+void handleInputPins(){
+    int d5 = digitalRead(D5);
+    int d6 = digitalRead(D6);
+    if ( d5 == 0 || d6 == 0){
+        digitalWrite(D0,1);
+    }
+    else{
+        digitalWrite(D0,0);
+    }
+}
+void handleAnalog(){
+    
+    display.setTextAlignment(TEXT_ALIGN_LEFT);
+    String stringOne =  String(analogRead(A0), DEC); 
+    display.drawString(0, 10, stringOne );
+}
 int i = 0;
 void loop() {
    server.handleClient();
-
+   display.clear();
+   handleInputPins();
+   handleAnalog();
    drawTextAlignmentDemo();
    i++;
    if ( i == 1000){
